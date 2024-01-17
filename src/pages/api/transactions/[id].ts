@@ -12,8 +12,6 @@ export default function handler(
 ) {
   const token = req.headers.authorization;
   if (token === process.env.TOKEN) {
-    console.log('req.query');
-    console.log(req);
     const { id } = req.query;
 
     if (id) {
