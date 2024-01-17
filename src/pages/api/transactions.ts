@@ -1,10 +1,10 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import type { NextApiRequest, NextApiResponse } from "next";
-import { transactions } from "@/pages/api/data/transactions";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { transactions } from '@/pages/api/data/transactions';
 import {
   ITransaction,
   ITransactionPreview,
-} from "@/interfaces/transaction.interface";
+} from '@/interfaces/transaction.interface';
 
 export default function handler(
   req: NextApiRequest,
@@ -12,22 +12,29 @@ export default function handler(
 ) {
   const token = req.headers.authorization;
   if (token === process.env.TOKEN) {
+    console.log('handler');
     console.log(req.query);
-    const { id } = req.query;
+    const {
+      id,
+      type,
+      status,
+    } = req.query;
 
-    if (id) {
-      console.log(id);
-      const transaction = transactions.find((t) => t.id == id);
-      if (transaction) {
-        console.log(transaction);
-        res.status(200).send(transaction);
-      } else {
-        res.status(404).send("Error");
-      }
-    } else {
-      res.status(200).send(transactions);
+    let resultTransactions: any = transactions;
+    if (type) {
+      resultTransactions = transactions.filter((item) =>
+        item.type.indexOf(type as string) !== -1);
     }
+
+    console.log('----------HERE 938D134391A18726');
+    console.log(resultTransactions);
+    if (status) {
+      resultTransactions = resultTransactions.filter((item) => item.status.indexOf(status as string) !== -1);
+    }
+
+    res.status(200).send(resultTransactions);
+
   } else {
-    res.status(401).send("unauthorised");
+    res.status(401).send('unauthorised');
   }
 }

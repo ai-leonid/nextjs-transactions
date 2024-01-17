@@ -7,9 +7,10 @@ export interface ITransactionPreview {
   amount: number;
   type: TransactionTypeEnum;
   description: string;
+  status: TransactionStatusEnum;
 }
 export interface ITransaction extends ITransactionPreview {
-  status: TransactionStatusEnum;
   category: string;
   paymentDetail: string;
+  [key: string]: string | number | undefined;
 }

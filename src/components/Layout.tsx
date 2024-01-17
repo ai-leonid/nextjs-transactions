@@ -9,7 +9,9 @@ const Layout: FC<ILayoutProp> = ({ children }) => {
   return (
     <>
       <Header />
-      {children}
+      <main className="layout">
+        {children}
+      </main>
       <Footer />
     </>
   );

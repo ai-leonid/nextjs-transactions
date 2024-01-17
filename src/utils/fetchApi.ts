@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from 'axios';
 
 export const axiosFetch = axios.create({
   baseURL: process.env.API_HOST,

@@ -1,11 +1,8 @@
 import { FC } from "react";
 
+
 const Home: FC = () => {
-  return (
-    <>
-      <p>Home PAGE</p>
-    </>
-  );
+  return null;
 };
 
 export default Home;

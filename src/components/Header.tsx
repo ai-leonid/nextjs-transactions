@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 const Header: FC = () => {
-  return <header>Список транзакций</header>;
+  return <header style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div>Список транзакций</div></header>;
 };
 
 export default Header;
