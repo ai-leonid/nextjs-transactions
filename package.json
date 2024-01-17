@@ -3,14 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 8080",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@reduxjs/toolkit": "^2.0.1",
+    "@ant-design/cssinjs": "^1.18.2",
+    "antd": "^5.13.1",
     "axios": "^1.6.5",
+    "@reduxjs/toolkit": "^2.0.1",
+    "@faker-js/faker": "^8.3.1",
     "chart.js": "^4.4.1",
     "next": "14.0.4",
     "react": "^18",

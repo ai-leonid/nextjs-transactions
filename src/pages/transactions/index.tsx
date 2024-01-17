@@ -1,10 +1,12 @@
 import { GetStaticProps } from "next";
-import { FC } from "react";
+import React, { FC } from "react";
 import { ITransactionPreview } from "@/interfaces/transaction.interface";
 import Link from "next/link";
 import { axiosFetch } from "@/utils/fetchApi";
 import { setTransactionsList } from "@/features/transaction.slice";
 import { store } from "@/store/store";
+import { Avatar, Button, List } from 'antd';
+import { faker } from '@faker-js/faker';
 
 interface ITransactionsProps {
   transactionsList: ITransactionPreview[];
@@ -12,7 +14,7 @@ interface ITransactionsProps {
 
 export const getStaticProps: GetStaticProps<ITransactionsProps> = async () => {
   try {
-    const response = await axiosFetch.get(`transactions/`);
+    const response = await axiosFetch.get(`/api/transactions/`);
 
     const data: ITransactionPreview[] = await response.data;
     store.dispatch(setTransactionsList(data));
@@ -28,21 +30,39 @@ export const getStaticProps: GetStaticProps<ITransactionsProps> = async () => {
   }
 };
 
-// ...
 
 const Transactions: FC<ITransactionsProps> = ({ transactionsList }) => {
   return (
-    <>
-      <p>main</p>
+    <div style={{ minHeight: '80vh' }}>
       {transactionsList &&
-        transactionsList.map((item) => (
-          <Link key={item.id} href={`/transactions/${item.id}`}>
-            <p>{item.date}</p>
-            <p>{item.amount}</p>
-            <p>{item.type}</p>
-          </Link>
-        ))}
-    </>
+        <List
+          className="demo-loadmore-list"
+          itemLayout="horizontal"
+          dataSource={transactionsList}
+          renderItem={(item) => (
+            <List.Item
+              actions={[<Button type="link" key="list-loadmore-more">Подробнее</Button>]}
+            >
+              <Skeleton avatar title={false} loading={false} active>
+                <List.Item.Meta
+                  avatar={
+                    <Avatar src={faker.image.urlPlaceholder({
+                      width: 80,
+                      height: 80,
+                      text: faker.word.adjective({ strategy: 'shortest' }),
+                    })} />}
+                  title={faker.finance.amount({
+                    min: -10000,
+                    max: 10000,
+                  })}
+                  description={'Kaspi Black | ' + faker.date.anytime().toISOString().slice(0, 10)}
+                />
+                <div>{faker.finance.transactionType()}</div>
+              </Skeleton>
+            </List.Item>
+          )}
+        />}
+    </div>
   );
 };
 
