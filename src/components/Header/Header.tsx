@@ -1,9 +1,13 @@
 import styles from './Header.module.scss'
 
-export default function Header({ className }) {
+type props = {
+  className?: string
+}
+
+export default function Header({ className }: props) {
   return (
     <header className={`${styles.header} ${className}`}>
-      <div>Транзакции</div>
+      <div>Список транзакций</div>
     </header>
   )
 }
