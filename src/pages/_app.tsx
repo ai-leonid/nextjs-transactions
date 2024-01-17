@@ -1,19 +1,15 @@
-import React from 'react';
-import { ConfigProvider } from 'antd';
-import '@/styles/globals.scss';
-import type { AppProps } from 'next/app';
-import Layout from '@/components/Layout/Layout';
-import theme from '@/theme/themeConfig';
+import "@/styles/globals.scss";
+import type { AppProps } from "next/app";
+import Layout from "@/components/Layout";
+import { Provider } from "react-redux";
+import { store } from "@/store/store";
 
-export default function App({
-  Component,
-  pageProps,
-}: AppProps) {
+export default function App({ Component, pageProps }: AppProps) {
   return (
-    <ConfigProvider theme={theme}>
+    <Provider store={store}>
       <Layout>
         <Component {...pageProps} />
       </Layout>
-    </ConfigProvider>
+    </Provider>
   );
 }
