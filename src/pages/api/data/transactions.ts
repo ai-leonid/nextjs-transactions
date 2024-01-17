@@ -203,4 +203,14 @@ export const transactions: ITransaction[] = [
     category: "Транспорт",
     paymentDetail: "Card ending in 6666",
   },
+  {
+    id: "21",
+    date: "2022-02-20",
+    amount: -235,
+    type: TransactionTypeEnum.expense,
+    description: "Проверка",
+    status: TransactionStatusEnum.pending,
+    category: "Транспорт",
+    paymentDetail: "Card ending in 6666",
+  },
 ];

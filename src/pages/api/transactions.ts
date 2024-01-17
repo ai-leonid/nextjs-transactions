@@ -5,6 +5,8 @@ import {
   ITransaction,
   ITransactionPreview,
 } from '@/interfaces/transaction.interface';
+import { findInObjects } from '@/utils/findInObjects';
+
 
 export default function handler(
   req: NextApiRequest,
@@ -14,22 +16,25 @@ export default function handler(
   if (token === process.env.TOKEN) {
     console.log('handler');
     console.log(req.query);
+
     const {
-      id,
+      search,
       type,
       status,
     } = req.query;
 
-    let resultTransactions: any = transactions;
+    let resultTransactions: ITransaction[] = transactions;
     if (type) {
       resultTransactions = transactions.filter((item) =>
         item.type.indexOf(type as string) !== -1);
     }
 
-    console.log('----------HERE 938D134391A18726');
-    console.log(resultTransactions);
     if (status) {
       resultTransactions = resultTransactions.filter((item) => item.status.indexOf(status as string) !== -1);
+    }
+
+    if (search) {
+      resultTransactions = findInObjects(resultTransactions, search);
     }
 
     res.status(200).send(resultTransactions);

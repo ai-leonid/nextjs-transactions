@@ -1,33 +1,42 @@
-import { GetStaticProps } from 'next';
-import React, { FC, useState } from 'react';
+import { GetServerSideProps, GetServerSidePropsContext } from 'next';
+import React, { FC, useDeferredValue, useEffect, useState } from 'react';
 import { ITransactionPreview } from '@/interfaces/transaction.interface';
 import Link from 'next/link';
 import { axiosFetch } from '@/utils/fetchApi';
 // import { setTransactionsList } from "@/features/transaction.slice";
 // import { store } from "@/store/store";
-import { Avatar, Button, List, Skeleton, Select, Space } from 'antd';
+import { Avatar, Input, List, Skeleton, Select, Space, AutoComplete, SelectProps } from 'antd';
+import type { SearchProps } from 'antd/es/input/Search';
 import { faker } from '@faker-js/faker';
 import { useRouter } from 'next/router';
+import { useDebounce } from '@/utils/useDebounce';
+
+
+const { Search } = Input;
+const options = [
+  { value: 'Burns Bay Road' },
+  { value: 'Downing Street' },
+  { value: 'Wall Street' },
+];
 
 interface ITransactionsProps {
   transactionsList: ITransactionPreview[];
 }
 
-export const getServerSideProps: GetStaticProps<ITransactionsProps> = async ({ query }) => {
+export const getServerSideProps: GetServerSideProps<ITransactionsProps> = async (
+  { query }: GetServerSidePropsContext
+) => {
   try {
-    console.log('getServerSideProps');
     const response = await axiosFetch.get(`/api/transactions/`, { params: query });
 
     const data: ITransactionPreview[] = await response.data;
-
-    console.log('-----------data');
-    console.log(data);
 
     return {
       props: { transactionsList: data },
     };
   } catch (error) {
-    console.error('Error fetching data:', error);
+    // @ts-ignore
+    console.error('Error fetching data:', error.message);
     return {
       props: { transactionsList: [] },
     };
@@ -38,48 +47,80 @@ export const getServerSideProps: GetStaticProps<ITransactionsProps> = async ({ q
 const Transactions: FC<ITransactionsProps> = ({ transactionsList }) => {
   const [input, setInput] = useState('');
   const router = useRouter();
+  const debouncedValue = useDebounce<string>(input, 1000);
+  const [options, setOptions] = useState<SelectProps<object>['options']>([]);
 
-  const search = (e: any) => {
-    setInput(e.target.value);
-    console.log('You searched', input);
+  useEffect(() => {
+    router.push(
+      {
+        query: {
+          ...router.query,
+          search: debouncedValue,
+        },
+      },
+      undefined,
+      {},
+    );
+  }, [debouncedValue]);
+
+  const onSearch = (value: string) => {
+    setInput(value);
+  };
+
+
+  const handleAutocompleteSearch = (value: string) => {
+    setOptions(value ? [{
+      value: 'Проект',
+      label: 'Проект'}] : []);
+  };
+
+  const onSelect = (value: string) => {
+    console.log('onSelect', value);
   };
 
   const handleChangeTransactionType = (value: string) => {
     router.push(
       {
-        ...router,
         query: {
           ...router.query,
           type: value,
         },
       },
       undefined,
+      {},
     );
   };
 
   const handleChangeTransactionStatus = (value: string) => {
     router.push(
       {
-        ...router,
         query: {
           ...router.query,
           status: value,
         },
       },
       undefined,
+      {},
     );
   };
 
-
   return (
     <div>
-      <div>
+      <div style={{
+        marginTop: 20,
+        marginBottom: 20,
+      }}>
         <Space wrap>
           <Select
-            defaultValue="income"
-            style={{ width: 120 }}
+            defaultValue={router.query.type as string || ''}
+            style={{ width: 200 }}
             onChange={handleChangeTransactionType}
             options={[
+              {
+                value: '',
+                label: 'Выберите тип',
+                disabled: true,
+              },
               {
                 value: 'income',
                 label: 'income',
@@ -91,10 +132,15 @@ const Transactions: FC<ITransactionsProps> = ({ transactionsList }) => {
             ]}
           />
           <Select
-            defaultValue="pending"
-            style={{ width: 120 }}
+            defaultValue={router.query.status as string || ''}
+            style={{ width: 200 }}
             onChange={handleChangeTransactionStatus}
             options={[
+              {
+                value: '',
+                label: 'Выберите статус',
+                disabled: true,
+              },
               {
                 value: 'pending',
                 label: 'pending',
@@ -109,7 +155,22 @@ const Transactions: FC<ITransactionsProps> = ({ transactionsList }) => {
               },
             ]}
           />
-          <input type="text" placeholder="Search for a note..." value={input} onChange={search} />
+          <AutoComplete
+            popupMatchSelectWidth={252}
+            style={{ width: 300 }}
+            options={options}
+            onSelect={onSelect}
+            onSearch={handleAutocompleteSearch}
+            size="large"
+          >
+            <Search
+              defaultValue={router.query.search as string || ''}
+              placeholder="Поиск"
+              onSearch={onSearch}
+              enterButton
+              style={{ width: 200 }} />
+          </AutoComplete>
+
         </Space>
       </div>
       {transactionsList &&
@@ -132,7 +193,7 @@ const Transactions: FC<ITransactionsProps> = ({ transactionsList }) => {
                   title={item.amount}
                   description={`${item.description} | ' ${item.date}`}
                 />
-                <div style={{marginRight: 10}}>{item.type}</div>
+                <div style={{ marginRight: 10 }}>{item.type}</div>
                 <div>{item.status}</div>
               </Skeleton>
             </List.Item>
