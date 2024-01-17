@@ -6,23 +6,29 @@ import {
 } from '@/interfaces/transaction.interface';
 import { findInObjects } from '@/utils/findInObjects';
 
-
+export type DropdownType = {
+  value: string,
+  label: string,
+}
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<string[]>,
+  res: NextApiResponse<DropdownType[]>,
 ) {
   const {
     search,
   } = req.query;
 
-  let dropdownList: string[] = [];
+  let dropdownList: ITransaction[] = [];
 
   if (search) {
     dropdownList = findInObjects(transactions, search as string, 'description');
     // dropdownList = findInObjects(dropdownList, search as string, 'paymentDetail');
   }
 
-  const flatDropdown = dropdownList.map(item => item.description);
+  const flatDropdown: DropdownType[] = dropdownList.map((item) => ({
+    value: item.description,
+    label: item.description,
+  }));
 
   res.status(200).send(flatDropdown);
 }
