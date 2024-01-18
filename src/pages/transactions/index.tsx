@@ -9,6 +9,7 @@ import {
   DatePicker,
   notification,
 } from 'antd';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useDebounce } from '@/utils/useDebounce';
 import { useTranslation } from 'react-i18next';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
@@ -17,12 +18,16 @@ import { ITransaction } from '@/interfaces/transaction.interface';
 import Diagram from '@/components/Diagram';
 import Sums from '@/components/Sums';
 import TransactionList from '@/components/TransactionList';
-import { TransactionTypeEnum } from '@/enums/transactionType.enum';
-import { TransactionStatusEnum } from '@/enums/transactionStatus.enum';
-import { Dayjs } from 'dayjs';
+import { TransactionTypeEnum, TransactionTypeServiceEnum } from '@/enums/transactionType.enum';
+import {
+  TransactionStatusEnum,
+  TransactionStatusServiceEnum,
+} from '@/enums/transactionStatus.enum';
+import dayjs, { Dayjs } from 'dayjs';
 
 const { Search } = Input;
 const { RangePicker } = DatePicker;
+dayjs.extend(customParseFormat);
 
 interface ITransactionsProps {
   transactionsList: ITransaction[];
@@ -30,6 +35,8 @@ interface ITransactionsProps {
 }
 
 type RangeValue = [Dayjs | null, Dayjs | null] | null;
+
+const dateFormat = 'YYYY-MM-DD';
 
 export const getServerSideProps: GetServerSideProps<
   ITransactionsProps
@@ -61,9 +68,9 @@ const Transactions: FC<ITransactionsProps> = ({
   resStatus,
 }) => {
   const [searchInput, setSearchInput] = useState('');
+  const [typeSelect, setTypeSelect] = useState('');
+  const [statusSelect, setStatusSelect] = useState('');
   const [datePickerValue, setDatePickerValue] = useState<RangeValue>(null);
-  const [dateStart, setDateStart] = useState('');
-  const [dateEnd, setDateEnd] = useState('');
   const router = useRouter();
   const debouncedValue = useDebounce<string>(searchInput, 1000);
   const [options, setOptions] = useState<SelectProps<object>['options']>([]);
@@ -81,6 +88,30 @@ const Transactions: FC<ITransactionsProps> = ({
       {},
     );
   }, [debouncedValue]);
+
+  useEffect(() => {
+    const {
+      dateEnd,
+      dateStart,
+      type,
+      status,
+    } = router.query;
+
+    if (dateStart && dateEnd) {
+      setDatePickerValue([
+        dayjs(dateStart as string, dateFormat),
+        dayjs(dateEnd as string, dateFormat),
+      ]);
+    }
+    // if (type) {
+    //   setTypeSelect(type as string);
+    // }
+    //
+    // if (status) {
+    //   setStatusSelect(status as string);
+    // }
+  }, [router.query]);
+
 
   const onSearch = (value: string) => {
     setSearchInput(value);
@@ -109,13 +140,12 @@ const Transactions: FC<ITransactionsProps> = ({
     setSearchInput(value);
   };
 
-  const onRangePickerChange = (value: any[]) => {
-    if (value) {
-      const dateStartVal = value[0].format('YYYY-MM-DD');
-      const dateEndVal = value[1].format('YYYY-MM-DD');
+  const onRangePickerChange = (value: RangeValue) => {
+    setDatePickerValue(value);
 
-      setDateStart(dateStartVal);
-      setDateEnd(dateEndVal);
+    if (value) {
+      const dateStartVal = value[0]?.format(dateFormat);
+      const dateEndVal = value[1]?.format(dateFormat);
 
       router.push(
         {
@@ -128,15 +158,34 @@ const Transactions: FC<ITransactionsProps> = ({
         undefined,
         {},
       );
+    } else {
+      delete router.query.dateStart;
+      delete router.query.dateEnd;
+
+      router.push(
+        {
+          query: {
+            ...router.query,
+          },
+        },
+        undefined,
+        {},
+      );
     }
   };
 
-  const handleChangeTransactionType = (value: string) => {
+  const onClearTypeChange = () => {
+    setTypeSelect('');
+
+    const {
+      type,
+      ...rest
+    } = router.query;
+
     router.push(
       {
         query: {
-          ...router.query,
-          type: value,
+          ...rest,
         },
       },
       undefined,
@@ -144,25 +193,73 @@ const Transactions: FC<ITransactionsProps> = ({
     );
   };
 
-  const handleChangeTransactionStatus = (value: string) => {
+  const onClearStatusChange = () => {
+    setStatusSelect('');
+
+    const {
+      status,
+      ...rest
+    } = router.query;
+
     router.push(
       {
         query: {
-          ...router.query,
-          status: value,
+          ...rest,
         },
       },
       undefined,
       {},
     );
+  };
+
+  const handleChangeTransactionType = (value: string) => {
+
+    if (value) {
+      setTypeSelect(value);
+
+      router.push(
+        {
+          query: {
+            ...router.query,
+            type: value,
+          },
+        },
+        undefined,
+        {},
+      );
+    }
+
+  };
+
+  const handleChangeTransactionStatus = (value: string) => {
+    if (value) {
+      setStatusSelect(value);
+      router.push(
+        {
+          query: {
+            ...router.query,
+            status: value,
+          },
+        },
+        undefined,
+        {},
+      );
+    }
   };
 
   return (
     <div>
       <div>
-        <Space wrap style={{ width: '100%', margin: '20px auto', justifyContent: 'space-between' }}>
+        <Space wrap
+          style={{
+            width: '100%',
+            margin: '20px auto',
+            justifyContent: 'space-between',
+          }}>
           <Select
-            defaultValue={(router.query.type as string) || ''}
+            allowClear
+            onClear={onClearTypeChange}
+            value={typeSelect}
             style={{ width: 230 }}
             onChange={handleChangeTransactionType}
             options={[
@@ -172,17 +269,19 @@ const Transactions: FC<ITransactionsProps> = ({
                 disabled: true,
               },
               {
-                value: TransactionTypeEnum.income,
+                value: TransactionTypeServiceEnum.INCOME,
                 label: t('income'),
               },
               {
-                value: TransactionTypeEnum.expense,
+                value: TransactionTypeServiceEnum.EXPENSE,
                 label: t('expense'),
               },
             ]}
           />
           <Select
-            defaultValue={(router.query.status as string) || ''}
+            allowClear
+            onClear={onClearStatusChange}
+            value={statusSelect}
             style={{ width: 230 }}
             onChange={handleChangeTransactionStatus}
             options={[
@@ -192,23 +291,28 @@ const Transactions: FC<ITransactionsProps> = ({
                 disabled: true,
               },
               {
-                value: TransactionStatusEnum.pending,
+                value: TransactionStatusServiceEnum.PENDING,
                 label: t('pending'),
               },
               {
-                value: TransactionStatusEnum.completed,
+                value: TransactionStatusServiceEnum.COMPLETED,
                 label: t('completed'),
               },
               {
-                value: TransactionStatusEnum.failed,
+                value: TransactionStatusServiceEnum.FAILED,
                 label: t('failed'),
               },
             ]}
           />
-          <RangePicker style={{ width: 300 }}
+          <RangePicker
+            value={datePickerValue}
+            style={{ width: 300 }}
             onChange={onRangePickerChange} />
         </Space>
-        <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+        <Space style={{
+          width: '100%',
+          justifyContent: 'flex-end',
+        }}>
           <AutoComplete
             style={{ width: '100%' }}
             options={options}
