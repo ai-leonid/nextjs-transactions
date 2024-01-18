@@ -95,6 +95,7 @@ const Transactions: FC<ITransactionsProps> = ({
       dateStart,
       type,
       status,
+      search,
     } = router.query;
 
     if (dateStart && dateEnd) {
@@ -103,18 +104,26 @@ const Transactions: FC<ITransactionsProps> = ({
         dayjs(dateEnd as string, dateFormat),
       ]);
     }
-    // if (type) {
-    //   setTypeSelect(type as string);
-    // }
-    //
-    // if (status) {
-    //   setStatusSelect(status as string);
-    // }
-  }, [router.query]);
 
+    if (type) {
+      setTypeSelect(type as string);
+    }
 
-  const onSearch = (value: string) => {
+    if (status) {
+      setStatusSelect(status as string);
+    }
+
+    if (search) {
+      setSearchInput(search as string);
+    }
+  }, []);
+
+  const handleInputOnSearch = (value: string) => {
     setSearchInput(value);
+  };
+
+  const handleInputOnChange = (e: any) => {
+    setSearchInput(e.target.value);
   };
 
   const handleAutocompleteSearch = (value: string) => {
@@ -136,7 +145,7 @@ const Transactions: FC<ITransactionsProps> = ({
     );
   };
 
-  const onSelect = (value: string) => {
+  const handleAutocompleteSelect = (value: string) => {
     setSearchInput(value);
   };
 
@@ -159,13 +168,17 @@ const Transactions: FC<ITransactionsProps> = ({
         {},
       );
     } else {
-      delete router.query.dateStart;
-      delete router.query.dateEnd;
+
+      const {
+        dateStart,
+        dateEnd,
+        ...rest
+      } = router.query;
 
       router.push(
         {
           query: {
-            ...router.query,
+            ...rest,
           },
         },
         undefined,
@@ -313,16 +326,24 @@ const Transactions: FC<ITransactionsProps> = ({
           width: '100%',
           justifyContent: 'flex-end',
         }}>
+          {/*<Search
+            value={searchInput}
+            placeholder={t('searchPlaceholder')}
+            onChange={handleInputOnChange}
+            onSearch={handleInputOnSearch}
+            enterButton
+            style={{ width: 300 }}
+          />*/}
           <AutoComplete
             style={{ width: '100%' }}
             options={options}
-            onSelect={onSelect}
+            onSelect={handleAutocompleteSelect}
             onSearch={handleAutocompleteSearch}
           >
             <Search
-              defaultValue={(router.query.search as string) || ''}
+              value={searchInput}
               placeholder={t('searchPlaceholder')}
-              onSearch={onSearch}
+              onSearch={handleInputOnSearch}
               enterButton
               style={{ width: 300 }}
             />
