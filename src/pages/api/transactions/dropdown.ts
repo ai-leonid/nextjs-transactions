@@ -1,34 +1,23 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { transactions } from '@/pages/api/data/transactions';
-import {
-  ITransaction,
-  ITransactionPreview,
-} from '@/interfaces/transaction.interface';
-import { findInObjects } from '@/utils/findInObjects';
+import type { NextApiRequest, NextApiResponse } from "next";
+import { transactions } from "@/pages/api/data/transactions";
+import { findInObjects } from "@/utils/findInObjects";
 
-export type DropdownType = {
-  value: string,
-  label: string,
-}
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<DropdownType[]>,
+  res: NextApiResponse<string[]>,
 ) {
-  const {
-    search,
-  } = req.query;
+  const { search } = req.query;
 
-  let dropdownList: ITransaction[] = [];
+  let dropdownList: string[] = [];
 
   if (search) {
-    dropdownList = findInObjects(transactions, search as string, 'description');
-    // dropdownList = findInObjects(dropdownList, search as string, 'paymentDetail');
+    const matchingObjects = findInObjects(
+      transactions,
+      search as string,
+      "description",
+    );
+    dropdownList = matchingObjects.map((item) => item.description);
   }
 
-  const flatDropdown: DropdownType[] = dropdownList.map((item) => ({
-    value: item.description,
-    label: item.description,
-  }));
-
-  res.status(200).send(flatDropdown);
+  res.status(200).send(dropdownList);
 }

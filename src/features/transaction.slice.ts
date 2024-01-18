@@ -1,11 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
-import {
-  ITransaction,
-  ITransactionPreview,
-} from "@/interfaces/transaction.interface";
+import { ITransaction, ITransaction } from "@/interfaces/transaction.interface";
 
 interface IInitialState {
-  transactionsList: ITransactionPreview[];
+  transactionsList: ITransaction[];
   transaction: ITransaction[] | null;
 }
 

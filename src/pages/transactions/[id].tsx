@@ -1,13 +1,13 @@
-import { FC } from 'react';
-import { axiosFetch } from '@/utils/fetchApi';
-import { Descriptions } from 'antd';
-import type { DescriptionsProps } from 'antd';
-import { GetServerSidePropsContext } from 'next';
-import { ITransaction } from '@/interfaces/transaction.interface';
+import { FC } from "react";
+import { axiosFetch } from "@/utils/fetchApi";
+import { Descriptions } from "antd";
+import type { DescriptionsProps } from "antd";
+import { GetServerSidePropsContext } from "next";
+import { ITransaction } from "@/interfaces/transaction.interface";
 
 interface IDetailProps {
   transaction: ITransaction;
-  dataDescription: DescriptionsProps['items'];
+  dataDescription: DescriptionsProps["items"];
 }
 
 export const getServerSideProps = async (
@@ -16,12 +16,10 @@ export const getServerSideProps = async (
   const id = context.query.id;
 
   try {
-    const response = await axiosFetch.get(`/api/transactions/${id}`);
+    const response = await axiosFetch.get(`/transactions/${id}`);
     const data: ITransaction = await response.data;
 
     const dataDescription = Object.keys(data).map((item) => {
-      console.log(item);
-
       return {
         key: item,
         label: item,
@@ -29,25 +27,26 @@ export const getServerSideProps = async (
       };
     });
 
-    console.log(dataDescription);
-
     return {
       props: { transaction: data, dataDescription },
     };
   } catch (error) {
-    console.error('Error fetching transaction data:', error);
+    console.error("Error fetching transaction data:", error);
     return {
       notFound: true,
     };
   }
 };
 
-const DetailTransaction: FC<IDetailProps> = ({ transaction, dataDescription }) => {
+const DetailTransaction: FC<IDetailProps> = ({
+  transaction,
+  dataDescription,
+}) => {
   return (
     <>
       <p>Detail</p>
       {transaction && (
-          <Descriptions title="Transaction Detail" items={dataDescription} />
+        <Descriptions title="Transaction Detail" items={dataDescription} />
       )}
     </>
   );

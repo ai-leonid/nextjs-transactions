@@ -67,6 +67,11 @@ header {
   width: 100%;
   background-color: #515151;
   color: #c9c9c9;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
 }
 
 .layout {

@@ -1,54 +1,63 @@
-import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import React, { FC, useDeferredValue, useEffect, useState } from 'react';
-import { ITransactionPreview } from '@/interfaces/transaction.interface';
-import Link from 'next/link';
-import { axiosFetch } from '@/utils/fetchApi';
-// import { setTransactionsList } from "@/features/transaction.slice";
-// import { store } from "@/store/store";
-import { Avatar, Input, List, Skeleton, Select, Space, AutoComplete, SelectProps } from 'antd';
-import type { SearchProps } from 'antd/es/input/Search';
-import { faker } from '@faker-js/faker';
-import { useRouter } from 'next/router';
-import { useDebounce } from '@/utils/useDebounce';
-
+import React, { FC, useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import {
+  Select,
+  Space,
+  AutoComplete,
+  SelectProps,
+  Input,
+  notification,
+} from "antd";
+import { useDebounce } from "@/utils/useDebounce";
+import { useTranslation } from "react-i18next";
+import { GetServerSideProps, GetServerSidePropsContext } from "next";
+import { axiosFetch } from "@/utils/fetchApi";
+import { ITransaction } from "@/interfaces/transaction.interface";
+import Diagram from "@/components/Diagram";
+import Sums from "@/components/Sums";
+import TransactionList from "@/components/TransactionList";
+import { TransactionTypeEnum } from "@/enums/transactionType.enum";
+import { TransactionStatusEnum } from "@/enums/transactionStatus.enum";
 
 const { Search } = Input;
-const options = [
-  { value: 'Burns Bay Road' },
-  { value: 'Downing Street' },
-  { value: 'Wall Street' },
-];
 
 interface ITransactionsProps {
-  transactionsList: ITransactionPreview[];
+  transactionsList: ITransaction[];
+  resStatus: number | null;
 }
 
-export const getServerSideProps: GetServerSideProps<ITransactionsProps> = async (
-  { query }: GetServerSidePropsContext
-) => {
+export const getServerSideProps: GetServerSideProps<
+  ITransactionsProps
+> = async ({ query }: GetServerSidePropsContext) => {
   try {
-    const response = await axiosFetch.get(`/api/transactions/`, { params: query });
-
-    const data: ITransactionPreview[] = await response.data;
+    const response = await axiosFetch.get(`/transactions/`, { params: query });
+    const status = response.status;
+    const data: ITransaction[] = await response.data;
 
     return {
-      props: { transactionsList: data },
+      props: { transactionsList: data, resStatus: status },
     };
   } catch (error) {
-    // @ts-ignore
-    console.error('Error fetching data:', error.message);
+    console.error("Error fetching data:", error);
     return {
-      props: { transactionsList: [] },
+      props: { transactionsList: [], resStatus: null },
     };
   }
+
+  return {
+    props: { transactionsList: [], resStatus: null },
+  };
 };
 
-
-const Transactions: FC<ITransactionsProps> = ({ transactionsList }) => {
-  const [input, setInput] = useState('');
+const Transactions: FC<ITransactionsProps> = ({
+  transactionsList,
+  resStatus,
+}) => {
+  const [input, setInput] = useState("");
   const router = useRouter();
   const debouncedValue = useDebounce<string>(input, 1000);
-  const [options, setOptions] = useState<SelectProps<object>['options']>([]);
+  const [options, setOptions] = useState<SelectProps<object>["options"]>([]);
+  const { t } = useTranslation();
 
   useEffect(() => {
     router.push(
@@ -67,16 +76,26 @@ const Transactions: FC<ITransactionsProps> = ({ transactionsList }) => {
     setInput(value);
   };
 
-
   const handleAutocompleteSearch = (value: string) => {
-    setOptions(value ? [{
-      value: 'Проект',
-      label: 'Проект'}] : []);
+    setOptions(
+      value
+        ? Array.from(
+            new Set(
+              transactionsList
+                .filter((t) =>
+                  t.category.toLowerCase().includes(value.toLowerCase()),
+                )
+                .map((t) => t.category),
+            ),
+          ).map((category) => ({
+            value: category,
+            label: category,
+          }))
+        : [],
+    );
   };
 
-  const onSelect = (value: string) => {
-    console.log('onSelect', value);
-  };
+  const onSelect = (value: string) => {};
 
   const handleChangeTransactionType = (value: string) => {
     router.push(
@@ -106,52 +125,57 @@ const Transactions: FC<ITransactionsProps> = ({ transactionsList }) => {
 
   return (
     <div>
-      <div style={{
-        marginTop: 20,
-        marginBottom: 20,
-      }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "row",
+          margin: "20px auto",
+        }}
+      >
         <Space wrap>
           <Select
-            defaultValue={router.query.type as string || ''}
+            defaultValue={(router.query.type as string) || ""}
             style={{ width: 200 }}
             onChange={handleChangeTransactionType}
             options={[
               {
-                value: '',
-                label: 'Выберите тип',
+                value: "",
+                label: t("selectType"),
                 disabled: true,
               },
               {
-                value: 'income',
-                label: 'income',
+                value: TransactionTypeEnum.income,
+                label: t("income"),
               },
               {
-                value: 'expense',
-                label: 'expense',
+                value: TransactionTypeEnum.expense,
+                label: t("expense"),
               },
             ]}
           />
           <Select
-            defaultValue={router.query.status as string || ''}
+            defaultValue={(router.query.status as string) || ""}
             style={{ width: 200 }}
             onChange={handleChangeTransactionStatus}
             options={[
               {
-                value: '',
-                label: 'Выберите статус',
+                value: "",
+                label: t("selectStatus"),
                 disabled: true,
               },
               {
-                value: 'pending',
-                label: 'pending',
+                value: TransactionStatusEnum.pending,
+                label: t("pending"),
               },
               {
-                value: 'completed',
-                label: 'completed',
+                value: TransactionStatusEnum.completed,
+                label: t("completed"),
               },
               {
-                value: 'failed',
-                label: 'failed',
+                value: TransactionStatusEnum.failed,
+                label: t("failed"),
               },
             ]}
           />
@@ -161,44 +185,22 @@ const Transactions: FC<ITransactionsProps> = ({ transactionsList }) => {
             options={options}
             onSelect={onSelect}
             onSearch={handleAutocompleteSearch}
-            size="large"
           >
             <Search
-              defaultValue={router.query.search as string || ''}
-              placeholder="Поиск"
+              defaultValue={(router.query.search as string) || ""}
+              placeholder={t("searchPlaceholder")}
               onSearch={onSearch}
               enterButton
-              style={{ width: 200 }} />
+              style={{ width: 200 }}
+            />
           </AutoComplete>
-
         </Space>
       </div>
-      {transactionsList &&
-        <List
-          className="demo-loadmore-list"
-          itemLayout="horizontal"
-          dataSource={transactionsList}
-          renderItem={(item) => (
-            <List.Item
-              actions={[<Link key="details" href={`/transactions/${item.id}`}>Подробнее</Link>]}
-            >
-              <Skeleton avatar title={false} loading={false} active>
-                <List.Item.Meta
-                  avatar={
-                    <Avatar src={faker.image.urlPlaceholder({
-                      width: 80,
-                      height: 80,
-                      text: faker.word.adjective({ strategy: 'shortest' }),
-                    })} />}
-                  title={item.amount}
-                  description={`${item.description} | ' ${item.date}`}
-                />
-                <div style={{ marginRight: 10 }}>{item.type}</div>
-                <div>{item.status}</div>
-              </Skeleton>
-            </List.Item>
-          )}
-        />}
+      <Sums transactionsList={transactionsList} />
+      <Diagram transactionsList={transactionsList} />
+      {transactionsList && (
+        <TransactionList transactionsList={transactionsList} />
+      )}
     </div>
   );
 };
