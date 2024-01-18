@@ -116,7 +116,7 @@ const Transactions: FC<ITransactionsProps> = ({
     if (search) {
       setSearchInput(search as string);
     }
-  }, []);
+  }, [router.query]);
 
   const handleInputOnSearch = (value: string) => {
     setSearchInput(value);
@@ -127,6 +127,8 @@ const Transactions: FC<ITransactionsProps> = ({
   };
 
   const handleAutocompleteSearch = (value: string) => {
+    setSearchInput(value);
+
     setOptions(
       value
         ? Array.from(
@@ -337,6 +339,7 @@ const Transactions: FC<ITransactionsProps> = ({
           <AutoComplete
             style={{ width: '100%' }}
             options={options}
+            value={searchInput}
             onSelect={handleAutocompleteSelect}
             onSearch={handleAutocompleteSearch}
           >
