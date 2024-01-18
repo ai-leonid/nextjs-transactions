@@ -110,23 +110,25 @@ const Transactions: FC<ITransactionsProps> = ({
   };
 
   const onRangePickerChange = (value: any[]) => {
-    const dateStartVal = value[0].format('YYYY-MM-DD');
-    const dateEndVal = value[1].format('YYYY-MM-DD');
+    if (value) {
+      const dateStartVal = value[0].format('YYYY-MM-DD');
+      const dateEndVal = value[1].format('YYYY-MM-DD');
 
-    setDateStart(dateStartVal);
-    setDateEnd(dateEndVal);
+      setDateStart(dateStartVal);
+      setDateEnd(dateEndVal);
 
-    router.push(
-      {
-        query: {
-          ...router.query,
-          dateStart: dateStartVal,
-          dateEnd: dateEndVal,
+      router.push(
+        {
+          query: {
+            ...router.query,
+            dateStart: dateStartVal,
+            dateEnd: dateEndVal,
+          },
         },
-      },
-      undefined,
-      {},
-    );
+        undefined,
+        {},
+      );
+    }
   };
 
   const handleChangeTransactionType = (value: string) => {
