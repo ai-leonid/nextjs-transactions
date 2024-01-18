@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { transactions } from "@/pages/api/data/transactions";
 import { ITransaction } from "@/interfaces/transaction.interface";
 import { findInObjects } from "@/utils/findInObjects";
+import dayjs from 'dayjs';
 
 export default function handler(
   req: NextApiRequest,
@@ -10,7 +11,13 @@ export default function handler(
 ) {
   const token = req.headers.authorization;
   if (token === process.env.TOKEN) {
-    const { search, type, status } = req.query;
+    const {
+      search,
+      type,
+      status,
+      dateStart,
+      dateEnd,
+    } = req.query;
 
     let resultTransactions: ITransaction[] = transactions;
     if (type) {
@@ -20,6 +27,18 @@ export default function handler(
     if (status) {
       resultTransactions = resultTransactions.filter(
         (item) => item.status === status,
+      );
+    }
+
+    if (dateStart) {
+      resultTransactions = resultTransactions.filter(
+        (item) => dayjs(item.date).isAfter(dayjs(dateStart as string)),
+      );
+    }
+
+    if (dateEnd) {
+      resultTransactions = resultTransactions.filter(
+        (item) => dayjs(item.date).isBefore(dayjs(dateEnd as string)),
       );
     }
 
